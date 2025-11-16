@@ -9,17 +9,17 @@ generator client {
 }
 
 datasource db {
-  provider = "postgresql"
+  provider = "mongodb"
   url      = env("DATABASE_URL")
 }
 
 model User {
-  id               String      @id @default(uuid())
+  id               String      @id @default(auto()) @map("_id") @db.ObjectId
   email            String      @unique
   password         String? // Делаем опциональным для Google OAuth
   name             String?
-  username         String?
-  status           String?     @default("В поисках интересных тем… ")
+  username         String? 
+  status           String? @default("В поисках интересных тем… ")
   avatarUrl        String?
   avatarFrameUrl   String?
   backgroundUrl    String?
@@ -41,95 +41,69 @@ model User {
   following        Follows[]   @relation("follower")
   modActions       ModAction[] @relation("ModActions")
   bansMade         Ban[]       @relation("BansMade")
-
-  @@index([email])
-  @@index([username])
-  @@index([googleId])
 }
 
 model Follows {
-  id          String   @id @default(uuid())
-  followerId  String
-  followingId String
-  follower    User     @relation("follower", fields: [followerId], references: [id], onDelete: Cascade)
-  following   User     @relation("following", fields: [followingId], references: [id], onDelete: Cascade)
-  createdAt   DateTime @default(now())
-
-  @@unique([followerId, followingId])
-  @@index([followerId])
-  @@index([followingId])
+  id          String @id @default(auto()) @map("_id") @db.ObjectId
+  follower    User   @relation("follower", fields: [followerId], references: [id])
+  followerId  String @db.ObjectId
+  following   User   @relation("following", fields: [followingId], references: [id])
+  followingId String @db.ObjectId
 }
 
 model Post {
-  id        String    @id @default(uuid())
+  id        String    @id @default(auto()) @map("_id") @db.ObjectId
   content   String
   imageUrl  String? // URL одного изображения из Cloudinary
   emojiUrls String[] // Массив URL emoji (gif)
-  author    User      @relation(fields: [authorId], references: [id], onDelete: Cascade)
-  authorId  String
+  author    User      @relation(fields: [authorId], references: [id])
+  authorId  String    @db.ObjectId
   likes     Like[]
-  views     String[]  @default([]) // Массив UUID пользователей, просмотревших пост
+  views     String[] // Массив ID пользователей, просмотревших пост 
   comments  Comment[]
   createdAt DateTime  @default(now())
-
-  @@index([authorId])
-  @@index([createdAt])
 }
 
 model Like {
-  id        String   @id @default(uuid())
-  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-  userId    String
-  post      Post     @relation(fields: [postId], references: [id], onDelete: Cascade)
-  postId    String
-  createdAt DateTime @default(now())
-
-  @@unique([userId, postId])
-  @@index([userId])
-  @@index([postId])
+  id     String @id @default(auto()) @map("_id") @db.ObjectId
+  user   User   @relation(fields: [userId], references: [id])
+  userId String @db.ObjectId
+  post   Post   @relation(fields: [postId], references: [id])
+  postId String @db.ObjectId
 }
 
 model Comment {
-  id        String   @id @default(uuid())
-  content   String
-  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-  userId    String
-  post      Post     @relation(fields: [postId], references: [id], onDelete: Cascade)
-  postId    String
-  createdAt DateTime @default(now())
-
-  @@index([userId])
-  @@index([postId])
+  id      String @id @default(auto()) @map("_id") @db.ObjectId
+  content String
+  user    User   @relation(fields: [userId], references: [id])
+  userId  String @db.ObjectId
+  post    Post   @relation(fields: [postId], references: [id])
+  postId  String @db.ObjectId
 }
 
 model Chat {
-  id            String    @id @default(uuid())
-  participants  String[] // Массив UUID участников чата
+  id            String    @id @default(auto()) @map("_id") @db.ObjectId
+  participants  String[]  @db.ObjectId // IDs участников чата
   lastMessage   String? // Последнее сообщение для превью
   lastMessageAt DateTime? // Время последнего сообщения
   createdAt     DateTime  @default(now())
   updatedAt     DateTime  @updatedAt
   messages      Message[]
-
-  @@index([lastMessageAt])
 }
 
 model Message {
-  id        String   @id @default(uuid())
+  id        String   @id @default(auto()) @map("_id") @db.ObjectId
   content   String
-  senderId  String
-  chatId    String
+  senderId  String   @db.ObjectId
+  chatId    String   @db.ObjectId
   chat      Chat     @relation(fields: [chatId], references: [id], onDelete: Cascade)
   isRead    Boolean  @default(false)
   createdAt DateTime @default(now())
-
-  @@index([chatId])
-  @@index([senderId])
 }
 
 // Forum models
 model MediaFile {
-  id           String  @id @default(uuid())
+  id           String  @id @default(auto()) @map("_id") @db.ObjectId
   url          String // URL файла в Cloudinary
   publicId     String // Public ID в Cloudinary для удаления
   name         String? // Оригинальное имя файла
@@ -142,20 +116,17 @@ model MediaFile {
   duration     Int? // Длительность видео в секундах
 
   // Связи с постами
-  threadId String?
-  replyId  String?
+  threadId String? @db.ObjectId
+  replyId  String? @db.ObjectId
 
   createdAt DateTime @default(now())
 
   thread Thread? @relation(fields: [threadId], references: [id], onDelete: Cascade)
   reply  Reply?  @relation(fields: [replyId], references: [id], onDelete: Cascade)
-
-  @@index([threadId])
-  @@index([replyId])
 }
 
 model Board {
-  id               String   @id @default(uuid())
+  id               String   @id @default(auto()) @map("_id") @db.ObjectId
   name             String   @unique // /b/, /g/, /pol/ и т.д.
   title            String // "Random", "Technology", "Politics"
   description      String?
@@ -171,16 +142,13 @@ model Board {
 
   threads Thread[]
   bans    Ban[]
-
-  @@index([name])
-  @@index([isActive])
 }
 
 model Thread {
-  id         String  @id @default(uuid())
+  id         String  @id @default(auto()) @map("_id") @db.ObjectId
   shortId    String  @unique // Короткий уникальный ID поста
   slug       String? // Человекочитаемый slug для URL
-  boardId    String
+  boardId    String  @db.ObjectId
   subject    String? // Тема треда (опциональная)
   content    String // Содержимое OP поста
   authorName String? // Анонимное имя (опционально)
@@ -209,25 +177,19 @@ model Thread {
   lastBumpAt DateTime @default(now()) // Последний бамп
   createdAt  DateTime @default(now())
 
-  board      Board       @relation(fields: [boardId], references: [id], onDelete: Cascade)
-  replies    Reply[]
-  threadTags ThreadTag[]
+  board       Board       @relation(fields: [boardId], references: [id], onDelete: Cascade)
+  replies     Reply[]
+  threadTags  ThreadTag[]
 
   // Категория (иерархическая структура через Categories)
-  categoryId String?
+  categoryId String?     @db.ObjectId
   category   Categories? @relation(fields: [categoryId], references: [id])
-
-  @@index([boardId])
-  @@index([shortId])
-  @@index([boardId, lastBumpAt])
-  @@index([isPinned, lastBumpAt])
-  @@index([categoryId])
 }
 
 model Reply {
-  id         String  @id @default(uuid())
+  id         String  @id @default(auto()) @map("_id") @db.ObjectId
   shortId    String  @unique // Короткий уникальный ID поста
-  threadId   String
+  threadId   String  @db.ObjectId
   content    String // Содержимое поста
   authorName String? // Анонимное имя
   authorTrip String? // Трипкод
@@ -256,50 +218,38 @@ model Reply {
   thread Thread @relation(fields: [threadId], references: [id], onDelete: Cascade)
 
   @@unique([threadId, postNumber])
-  @@index([threadId])
-  @@index([shortId])
-  @@index([posterHash])
 }
 
 model ModAction {
-  id          String   @id @default(uuid())
-  moderatorId String
+  id          String   @id @default(auto()) @map("_id") @db.ObjectId
+  moderatorId String   @db.ObjectId
   action      String // "delete_post", "ban_user", "pin_thread", etc.
   targetType  String // "thread", "reply", "user"
-  targetId    String
+  targetId    String   @db.ObjectId
   reason      String?
   duration    Int? // Для банов - в часах
   createdAt   DateTime @default(now())
 
-  moderator User @relation("ModActions", fields: [moderatorId], references: [id], onDelete: Cascade)
-
-  @@index([moderatorId])
-  @@index([targetType, targetId])
-  @@index([createdAt])
+  moderator User @relation("ModActions", fields: [moderatorId], references: [id])
 }
 
 model Ban {
-  id          String    @id @default(uuid())
+  id          String    @id @default(auto()) @map("_id") @db.ObjectId
   ipHash      String // Хеш IP адреса
-  boardId     String? // null = глобальный бан
+  boardId     String?   @db.ObjectId // null = глобальный бан
   reason      String
-  moderatorId String
+  moderatorId String    @db.ObjectId
   expiresAt   DateTime?
   isActive    Boolean   @default(true)
   createdAt   DateTime  @default(now())
 
-  board     Board? @relation(fields: [boardId], references: [id], onDelete: SetNull)
-  moderator User   @relation("BansMade", fields: [moderatorId], references: [id], onDelete: Cascade)
-
-  @@index([ipHash])
-  @@index([boardId])
-  @@index([moderatorId])
-  @@index([isActive, expiresAt])
+  board     Board? @relation(fields: [boardId], references: [id])
+  moderator User   @relation("BansMade", fields: [moderatorId], references: [id])
 }
 
 // Forum categories & tags
 model Categories {
-  id          String  @id @default(uuid())
+  id          String  @id @default(auto()) @map("_id") @db.ObjectId
   name        String
   slug        String  @unique
   imageUrl    String?
@@ -308,21 +258,18 @@ model Categories {
   description String?
 
   // Иерархия категорий
-  parentId String?
+  parentId String?      @db.ObjectId
   parent   Categories?  @relation("CategoryHierarchy", fields: [parentId], references: [id], onDelete: NoAction, onUpdate: NoAction)
   children Categories[] @relation("CategoryHierarchy")
 
   // Треды внутри категории (категория не содержит борды)
   threads Thread[]
-  group   String?
-
-  @@index([slug])
-  @@index([parentId])
+  group String? 
 }
 
 // Теги с иконками/цветами
 model Tag {
-  id          String   @id @default(uuid())
+  id          String   @id @default(auto()) @map("_id") @db.ObjectId
   name        String
   slug        String   @unique
   icon        String?
@@ -332,22 +279,20 @@ model Tag {
 
   // связи
   threadTags ThreadTag[]
-
-  @@index([slug])
 }
 
 // Удалена связь Борд-Тег: теги существуют только у тредов
 
 // Связующая коллекция: Тред-Тег (many-to-many)
 model ThreadTag {
-  id       String @id @default(uuid())
-  threadId String
-  tagId    String
+  id       String @id @default(auto()) @map("_id") @db.ObjectId
+  threadId String @db.ObjectId
+  tagId    String @db.ObjectId
 
-  thread Thread @relation(fields: [threadId], references: [id], onDelete: Cascade)
-  tag    Tag    @relation(fields: [tagId], references: [id], onDelete: Cascade)
+  thread Thread @relation(fields: [threadId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  tag    Tag    @relation(fields: [tagId], references: [id], onDelete: NoAction, onUpdate: NoAction)
 
   @@unique([threadId, tagId])
-  @@index([threadId])
-  @@index([tagId])
 }
+
+
