@@ -8,16 +8,25 @@
     "dev": "nodemon index.js",
     "prisma:generate": "prisma generate"
   },
-  "keywords": ["socket.io", "chat", "microservice"],
+  "keywords": [
+    "socket.io",
+    "chat",
+    "microservice"
+  ],
   "author": "",
   "license": "ISC",
   "dependencies": {
-    "socket.io": "^4.7.2",
-    "express": "^4.18.2",
-    "jsonwebtoken": "^9.0.2",
-    "dotenv": "^16.3.1",
+    "@prisma/client": "^5.7.0",
+    "axios": "^1.13.2",
+    "connect-redis": "^9.0.0",
+    "cookie-parser": "^1.4.7",
     "cors": "^2.8.5",
-    "@prisma/client": "^5.7.0"
+    "dotenv": "^16.3.1",
+    "express": "^4.18.2",
+    "express-session": "^1.18.2",
+    "jsonwebtoken": "^9.0.2",
+    "redis": "^5.10.0",
+    "socket.io": "^4.7.2"
   },
   "devDependencies": {
     "nodemon": "^3.0.1",

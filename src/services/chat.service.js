@@ -15,7 +15,10 @@ class ChatService {
           has: userId
         }
       },
-      select: { id: true }
+      select: { 
+        id: true,
+        participants: true
+      }
     });
   }
 

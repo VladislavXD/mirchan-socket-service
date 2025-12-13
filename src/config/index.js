@@ -5,7 +5,16 @@ const config = {
   secretKey: process.env.SECRET_KEY || 'default_secret',
   databaseUrl: process.env.DATABASE_URL,
   frontendUrl: process.env.FRONTEND_URL || 'http://localhost:3000',
+  apiUrl: process.env.API_URL || 'http://localhost:4000', // NestJS API для проверки сессий
   nodeEnv: process.env.NODE_ENV || 'development',
+  
+  // Redis Configuration
+  redisUri: process.env.REDIS_URI || 'redis://localhost:6379',
+  
+  // Session Configuration (must match NestJS)
+  sessionSecret: process.env.SESSION_SECRET || 'QPRJDQPD',
+  sessionName: process.env.SESSION_NAME || 'session',
+  sessionFolder: process.env.SESSION_FOLDER || 'sessions:',
   
   // CORS origins
   corsOrigins: [
