@@ -24,6 +24,8 @@ const config = {
     'https://mirchan-express-api.vercel.app',
     "https://mirchan-nest-server.vercel.app",
     'https://mirchan.site',
+    'https://mirchan.site/',
+    'mirchan.site',
     process.env.FRONTEND_URL
   ].filter(Boolean),
 };
