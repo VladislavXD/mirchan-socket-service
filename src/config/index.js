@@ -22,6 +22,8 @@ const config = {
     'http://localhost:5173',
     'https://mirchan.netlify.app',
     'https://mirchan-express-api.vercel.app',
+    "https://mirchan-nest-server.vercel.app",
+    'https://mirchan.site',
     process.env.FRONTEND_URL
   ].filter(Boolean),
 };
