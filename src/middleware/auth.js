@@ -33,23 +33,15 @@ const socketAuthMiddleware = async (socket, next) => {
   try {
     const token = socket.handshake.auth.token;
     const cookies = socket.handshake.headers.cookie;
-    const origin = socket.handshake.headers.origin;
-    const host = socket.handshake.headers.host;
     
     console.log('🔐 Socket.IO auth attempt:', {
       hasToken: !!token,
       hasCookies: !!cookies,
-      origin: origin,
-      host: host,
-      cookies: cookies || '(no cookies)',
-      allHeaders: Object.keys(socket.handshake.headers)
+      cookies: cookies?.substring(0, 100) + '...'
     });
     
     if (!token && !cookies) {
       console.error('❌ No token or cookies provided');
-      console.error('   Origin:', origin);
-      console.error('   Host:', host);
-      console.error('   All headers:', socket.handshake.headers);
       return next(new Error('Authentication error: No credentials provided'));
     }
 

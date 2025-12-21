@@ -13,7 +13,8 @@ const initializeSocket = (httpServer) => {
       origin: config.corsOrigins,
       credentials: true,
       methods: ['GET', 'POST']
-    }
+    },
+    
   });
 
   // Middleware для аутентификации
