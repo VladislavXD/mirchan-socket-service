@@ -1,4 +1,3 @@
-const jwt = require('jsonwebtoken');
 const axios = require('axios');
 const config = require('../config');
 const { getPrismaClient } = require('../config/database');
@@ -25,30 +24,26 @@ function extractSessionId(cookieString, cookieName) {
 
 /**
  * Socket.IO authentication middleware
- * Поддерживает:
- * 1. Session Cookie с Redis (основной метод для NestJS)
- * 2. JWT токен (резервный метод для обратной совместимости)
+ * Используется только Session Cookie с Redis
  */
 const socketAuthMiddleware = async (socket, next) => {
   try {
-    const token = socket.handshake.auth.token;
     const cookies = socket.handshake.headers.cookie;
     
     console.log('🔐 Socket.IO auth attempt:', {
-      hasToken: !!token,
       hasCookies: !!cookies,
       cookies: cookies?.substring(0, 100) + '...'
     });
     
-    if (!token && !cookies) {
-      console.error('❌ No token or cookies provided');
+    if (!cookies) {
+      console.error('❌ No cookies provided');
       return next(new Error('Authentication error: No credentials provided'));
     }
 
     let userId = null;
     let user = null;
 
-    // Стратегия 1: Пробуем получить session из Redis (основной метод)
+    // Стратегия: Пробуем получить session из Redis (основной метод)
     if (cookies) {
       try {
         const sessionId = extractSessionId(cookies, config.sessionName);
@@ -71,24 +66,7 @@ const socketAuthMiddleware = async (socket, next) => {
       }
     }
 
-    // Стратегия 2: Пробуем JWT токен (для обратной совместимости)
-    if (!userId && token) {
-      try {
-        const decoded = jwt.verify(token, config.secretKey);
-        console.log('✅ JWT decoded successfully');
-        
-        // Поддержка разных структур токена
-        userId = decoded.userId || decoded.id || decoded.sub;
-        
-        if (userId) {
-          console.log('✅ User ID from JWT:', userId);
-        }
-      } catch (jwtError) {
-        console.log('⚠️  Not a valid JWT token:', jwtError.message);
-      }
-    }
-
-    // Стратегия 3: Если все еще нет userId, пробуем через NestJS API (резерв)
+    // Если нет userId, пробуем верифицировать сессию через NestJS API (резерв)
     if (!userId && config.apiUrl && cookies) {
       try {
         console.log('🔍 Trying to verify session via NestJS API...');

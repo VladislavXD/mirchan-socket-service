@@ -15,6 +15,7 @@ const initializeSocket = (httpServer) => {
       methods: ['GET', 'POST']
     },
     
+    
   });
 
   // Middleware для аутентификации
