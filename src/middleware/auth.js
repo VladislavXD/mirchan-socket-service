@@ -29,8 +29,8 @@ function extractSessionId(cookieString, cookieName) {
 const socketAuthMiddleware = async (socket, next) => {
   try {
     const cookies = socket.handshake.headers.cookie;
-    
-    console.log('🔐 Socket.IO auth attempt:', {
+
+    console.log('� Socket.IO auth attempt:', {
       hasCookies: !!cookies,
       cookies: cookies?.substring(0, 100) + '...'
     });
